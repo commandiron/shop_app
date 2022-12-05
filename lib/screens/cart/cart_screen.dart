@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shop_app/providers/cart.dart' show Cart;
 
 import 'package:shop_app/screens/cart/widgets/cart_item.dart';
+import 'package:shop_app/screens/cart/widgets/order_button.dart';
 import 'package:shop_app/screens/orders/orders_screen.dart';
 
 import '../../providers/orders.dart';
@@ -43,22 +44,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Provider.of<Orders>(context, listen: false).addOrder(
-                        cart.items.values.toList(),
-                        cart.totalAmount
-                      );
-                      cart.clear();
-                      Navigator.of(context).pushNamed(OrdersScreen.routeName);
-                    },
-                    child: Text("Order Now"),
-                    style: ButtonStyle(
-                      textStyle: MaterialStateProperty.all(
-                        Theme.of(context).primaryTextTheme.titleSmall
-                      )
-                    ),
-                  ),
+                  OrderButton(cart)
                 ],
               ),
             ),
