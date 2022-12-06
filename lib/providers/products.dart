@@ -8,6 +8,11 @@ import 'product.dart';
 class Products with ChangeNotifier {
   List<Product> _items = [];
 
+  final String authToken;
+  final String userId;
+
+  Products(this.authToken, this.userId, this._items);
+
   List<Product> get favoriteItems {
     return _items.where((item) => item.isFavorite).toList();
   }
@@ -21,11 +26,17 @@ class Products with ChangeNotifier {
   }
 
   Future<void> fetchAndSetProducts() async {
-    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=");
+    var url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken");
 
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      if(extractedData == null) {
+        return;
+      }
+      url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId.json?auth=$authToken");
+      final favoriteResponse = await http.get(url);
+      final favoriteData = json.decode(favoriteResponse.body);
       final List<Product> loadedProducts = [];
       extractedData.forEach(
         (prodId, prodData) {
@@ -35,8 +46,8 @@ class Products with ChangeNotifier {
               title: prodData["title"],
               description: prodData["description"],
               price: prodData["price"],
-              isFavorite: prodData["isFavorite"],
-              imageUrl: prodData["imageUrl"]
+              isFavorite: favoriteData == null ? false : favoriteData[prodId] ?? false,
+              imageUrl: prodData["imageUrl"],
             )
           );
         }
@@ -50,15 +61,14 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products.json");
+    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$authToken");
 
     try {
       final response = await http.post(url, body: json.encode({
         "title": product.title,
         "description": product.description,
         "imageUrl": product.imageUrl,
-        "price": product.price,
-        "isFavorite": product.isFavorite
+        "price": product.price
       }));
 
       final newProduct = Product(
@@ -82,7 +92,7 @@ class Products with ChangeNotifier {
   Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if(prodIndex >= 0) {
-      final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products/${id}.json");
+      final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products/${id}.json?auth=$authToken");
       try{
         await http.patch(url,body: json.encode({
           "title": newProduct.title,
@@ -102,7 +112,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> deleteProduct(String id) async {
-    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products/${id}.json");
+    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products/${id}.json?auth=$authToken");
 
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     var existingProduct = _items[existingProductIndex];
@@ -117,29 +127,5 @@ class Products with ChangeNotifier {
       throw HttpException("Could not delete product.");
     }
     existingProduct = null;
-  }
-
-  Future<void> toggleFavorite(String id) async {
-    final prodIndex = _items.indexWhere((prod) => prod.id == id);
-    if(prodIndex >= 0) {
-      final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products/${id}.json");
-      final newProduct = _items[prodIndex];
-      try{
-        await http.patch(url,body: json.encode({
-          "title": newProduct.title,
-          "description": newProduct.description,
-          "imageUrl": newProduct.imageUrl,
-          "price": newProduct.price,
-          "isFavorite": !newProduct.isFavorite
-        }));
-        _items[prodIndex] = newProduct;
-        notifyListeners();
-      }catch(error){
-        print(error);
-        throw error;
-      }
-    } else {
-      print("...");
-    }
   }
 }

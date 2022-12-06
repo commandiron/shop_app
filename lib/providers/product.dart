@@ -24,15 +24,15 @@ class Product with ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleFavoriteStatus() async {
-    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/products/${id}.json");
+  void toggleFavoriteStatus(String token, String userId) async {
+    final url = Uri.parse("https://my-shop-app-29703-default-rtdb.europe-west1.firebasedatabase.app/userFavorites/$userId/${id}.json?auth=$token");
     final oldStatus = isFavorite;
     isFavorite = !isFavorite;
     notifyListeners();
     try{
-      final response = await http.patch(url, body: json.encode({
-        "isFavorite" : isFavorite
-      }));
+      final response = await http.put(url, body: json.encode(
+        isFavorite
+      ));
       if(response.statusCode >= 400) {
         _setFavValue(oldStatus);
       }
