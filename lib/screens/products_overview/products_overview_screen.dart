@@ -29,17 +29,8 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
 
   @override
   void initState() {
-    setState(() {
-      _isLoading = true;
-    });
     Future.delayed(Duration(seconds: 1)).then((_) {
-      Provider.of<Products>(context, listen: false).fetchAndSetProducts().
-        then((value) {
-          setState((){
-            _isLoading = false;
-          });
-        }
-      );
+      Provider.of<Products>(context, listen: false).fetchAndSetProducts();
     });
     super.initState();
   }
