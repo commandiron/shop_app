@@ -120,17 +120,13 @@ class _AuthCardState extends State<AuthCard> {
         await Provider.of<Auth>(context, listen: false).signin(
           _authData["email"],
           _authData["password"],
-        ).then((value) => {
-          Navigator.of(context).pushReplacementNamed(ProductsOverviewScreen.routeName)
-        });
+        );
       } else {
         // Sign user up
         await Provider.of<Auth>(context, listen: false).signup(
           _authData["email"],
           _authData["password"],
-        ).then((value) => {
-          Navigator.of(context).pushReplacementNamed(ProductsOverviewScreen.routeName)
-        });
+        );
       }
     }catch(error){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.toString())));

@@ -6,6 +6,7 @@ import 'package:shop_app/screens/products_overview/widgets/badge.dart';
 import 'package:shop_app/screens/products_overview/widgets/products_grid.dart';
 
 import '../../providers/cart.dart';
+import '../../providers/product.dart';
 import '../../providers/products.dart';
 
 enum FilterOptions {
@@ -24,27 +25,30 @@ class ProductsOverviewScreen extends StatefulWidget {
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
 
   var _showOnlyFavorites = false;
-  var _isInit = true;
   var _isLoading = false;
 
   @override
-  void didChangeDependencies() {
-    if(_isInit){
-      setState((){
-        _isLoading = true;
-        Provider.of<Products>(context)
-            .fetchAndSetProducts()
-            .then((_){
-          _isLoading = false;
-        });
-      });
-    }
-    _isInit = false;
-    super.didChangeDependencies();
+  void initState() {
+    setState(() {
+      _isLoading = true;
+    });
+    Future.delayed(Duration(seconds: 1)).then((_) {
+      Provider.of<Products>(context, listen: false).fetchAndSetProducts().
+        then((value) {
+          setState((){
+            _isLoading = false;
+          });
+        }
+      );
+    });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final productsData = Provider.of<Products>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text("My Shop"),
@@ -88,7 +92,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
       drawer: AppDrawer(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(),)
-          : ProductsGrid(_showOnlyFavorites)
+          : ProductsGrid(_showOnlyFavorites, productsData.favoriteItems, productsData.items)
     );
   }
 }
